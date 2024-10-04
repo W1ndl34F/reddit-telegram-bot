@@ -29,17 +29,18 @@ async def get_hot_posts(subreddits, limit=100):
         random_posts = random.sample(all_posts, 1)
         for post in random_posts:
             title = post.title
-            preview_image_url = None
+            post_url, post_description = None, None
             # Check if there is a preview image
-            if hasattr(post, 'preview') and post.preview and 'images' in post.preview:
-                images = post.preview['images']
-                if images:
-                    preview_image_url = images[0]['source']['url']
+            if hasattr(post, 'url') and post.url:
+                post_url = post.url
+            if hasattr(post, 'selftext') and post.selftext:
+                post_description = post.selftext[:100]
             # Store the result in a dictionary
-            if preview_image_url:
+            if post_url or post_description:
                 hot_posts[subreddit].append({
                     'title': title,
-                    'preview_image_url': preview_image_url
+                    'post_url': post_url,
+                    'post_description': post_description
                 })
     return hot_posts
 async def send_to_telegram(message):
@@ -52,7 +53,7 @@ async def main():
     
     for subreddit, posts in hot_posts.items():
         for post in posts:
-            message = f"{post['title']}\n\n{post['preview_image_url']}"
+            message = f"From {subreddit}:\n\n{post['title']}\n\n{post['post_url']}\n\n{post['post_description']}"
             print(message)
             await send_to_telegram(message)
 
